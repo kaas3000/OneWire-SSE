@@ -10,6 +10,11 @@ int pinOut;
 int pulsesDetected;
 unsigned long pulseStart;
 boolean previousValue;
+int pulseValue;
+
+int leds[] = {
+  2, 5, 4, 3
+};
 
 void setup() {
   pinIn = A0;
@@ -17,47 +22,55 @@ void setup() {
   previousValue = OWHIGH;
   pulseStart = millis();
   pulsesDetected = 0;
-  actionId = 0;
-  int actions[][] = {};
-
-  Serial.begin(9600);
+  // actionId = 0;
+  // int actions[][] = {};
+  pulseValue = -1;
 
   pinMode(pinIn, INPUT);
   pinMode(pinOut, OUTPUT);
+
+  for(int i = 0; i < 4; i++) {
+    pinMode(leds[i], OUTPUT);
+    digitalWrite(leds[i], OWLOW);
+  }
+
+  Serial.begin(115200);
 }
 
 void loop() {
   int currentValue = readCurrentValue();
   unsigned long currentTime = millis();
-  int currentAction = getAction();
 
-  if (currentValue != previousValue) {
-    boolean syncPulse = false;
+  if ((currentTime - pulseStart >= 15)) {
+    Serial.println("NEW PULSETRAIN");
 
-    // rising or falling edge detected
-    if (currentTime - pulseStart >= 15 && currentValue == OWLOW) {
-      syncPulse = true;
-      // Serial.println("Sync pulse detected :)");
-      // Serial.println(pulsesDetected);
-
-      pulsesDetected = 0;
-      pulseStart = millis();
-    }
-
-    if (currentValue == OWHIGH && !syncPulse) {
-      pulsesDetected++;
-      pulseStart = millis();
-    }
-  } else {
-    /*
-     * ELSE
-     */
-    if ((pulsesDetected == 1 && currentAction == OW_ACTION_READWRITE) || (pulsesDetected == 1 && currentAction == OW_ACTION_WRITE)) {
-      sendSyncPulse();
-
-      pulseStart = millis();
-    } else if (currentAction == OW_ACTION_WRITE)
+    pulsesDetected = 0;
+    pulseStart = currentTime;
+    // pulseValue = -1;
+    // resetLeds();
   }
+
+  if ((currentValue < previousValue)) {
+  Serial.println(currentTime - pulseStart);
+
+  Serial.println(pulseValue);
+
+  digitalWrite(leds[pulsesDetected], !pulseValue);
+
+    pulsesDetected++;
+
+    pulseStart = currentTime;
+    pulseValue = -1;
+  }
+
+
+
+
+  if (currentTime == pulseStart + 4 && pulseValue == -1) {
+    pulseValue = currentValue;
+  }
+
+
 
   previousValue = currentValue;
 }
@@ -75,4 +88,10 @@ boolean getAction() {
 void sendSyncPulse() {
   digitalWrite(pinOut, OWHIGH);
   delay(20);
+}
+
+void resetLeds() {
+  for(int i = 0; i < 4; i++) {
+    digitalWrite(leds[i], OWLOW);
+  }
 }

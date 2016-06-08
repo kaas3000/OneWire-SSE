@@ -25,13 +25,21 @@ int leds[] = {
   2, 3, 4, 5
 };
 
+int switches[] = {
+  6, 7, 8, 12
+}
+
 void setup() {
   pinMode(pinIn, INPUT);
   pinMode(pinOut, OUTPUT);
 
-  for(int i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; i++) {
     pinMode(leds[i], OUTPUT);
     digitalWrite(leds[i], OWLOW);
+  }
+
+  for (int i = 0; i < 4; i++) {
+    pinMode(switches[i], INPUT);
   }
 
   Serial.begin(115200);
@@ -125,7 +133,7 @@ boolean readCurrentValue() {
 boolean getAction() {
   int action = OW_ACTION_LOW;
 
-  if (pulsesDetected % 2) {
+  if (digitalRead(switches[pulsesDetected])) {
     action = OW_ACTION_HIGH;
   }
 

@@ -13,6 +13,8 @@ unsigned long previousTime = 0;
 boolean previousValue = false;
 boolean pulseValue = OWLOW;
 
+boolean roleSender = true;
+
 int currentValue = 0;
 int currentAction = OW_ACTION_SKIP;
 unsigned long currentTime = 0;
@@ -27,7 +29,7 @@ int leds[] = {
 
 int switches[] = {
   6, 7, 8, 12
-}
+};
 
 void setup() {
   pinMode(pinIn, INPUT);
@@ -48,12 +50,19 @@ void setup() {
 void loop() {
   updateVariables();
 
-  detectAndProcessSyncPulse();
+  if (roleSender) {
+    sendSyncPulseIfNeccesary();
+    startNewPulseIfNeccesary();
+  } else {
+    detectAndProcessSyncPulse();
+    detectAndProcessNewPulse();
+  }
 
   detectAndProcessNewPulse();
 
   // If a millisecond has passed
   if (currentTime == previousTime + 1) {
+    // Serial.println(previousTime);
     unsigned long currentMillisecond = currentTime - pulseStart;
 
     if (currentAction != OW_ACTION_SKIP) {
@@ -79,12 +88,12 @@ void loop() {
     }
 
     if (currentMillisecond == 9) {
-      Serial.print(pulsesDetected);
-      Serial.print(" - ");
-      Serial.print(currentTime - pulseStart);
-      Serial.print(" - ");
-
-      Serial.println(pulseValue);
+      // Serial.print(pulsesDetected);
+      // Serial.print(" - ");
+      // Serial.print(currentTime - pulseStart);
+      // Serial.print(" - ");
+      //
+      // Serial.println(pulseValue);
 
       digitalWrite(leds[pulsesDetected - 1], !pulseValue);
     }
@@ -97,6 +106,7 @@ void loop() {
 void updateVariables() {
   currentValue = readCurrentValue();
   currentTime = millis();
+  currentAction = getAction();
 }
 
 /**
@@ -118,11 +128,26 @@ void detectAndProcessSyncPulse() {
  */
 void detectAndProcessNewPulse() {
   if (currentValue < previousValue) {
+    processNewPulse();
+  }
+}
 
-    pulsesDetected++;
+void startNewPulseIfNeccesary() {
+  if (currentTime - pulseStart > 9) {
+    // Serial.println("new pulse");
+    processNewPulse();
+  }
+}
 
-    pulseStart = currentTime;
-    pulseValue = false;
+/**
+ * Check if the syncpulse should be sended and send it
+ */
+void sendSyncPulseIfNeccesary() {
+  if (pulsesDetected >= 4 && currentTime - pulseStart > 9) {
+    sendSyncPulse();
+
+        pulsesDetected = 0;
+        pulseStart = currentTime;
   }
 }
 
@@ -143,6 +168,16 @@ boolean getAction() {
 void sendSyncPulse() {
   digitalWrite(pinOut, OWHIGH);
   delay(20);
+}
+
+/**
+ * Set all variables correctly for a new pulse
+ */
+void processNewPulse() {
+  pulsesDetected++;
+
+  pulseStart = currentTime;
+  pulseValue = false;
 }
 
 void resetLeds() {

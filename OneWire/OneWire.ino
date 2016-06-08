@@ -1,17 +1,21 @@
 #define OWHIGH LOW
 #define OWLOW HIGH
 
-#define OW_ACTION_READ 0
-#define OW_ACTION_WRITE 1
-#define OW_ACTION_READWRITE 2
+#define OW_ACTION_SKIP 0
+#define OW_ACTION_HIGH 1
+#define OW_ACTION_LOW 2
 
-int pinIn;
-int pinOut;
-int pulsesDetected;
-unsigned long pulseStart;
-boolean previousValue;
-int pulseValue;
-boolean asdf = false;
+int pinIn = A0;
+int pinOut = A1;
+int pulsesDetected = 0;
+unsigned long pulseStart = 0;
+unsigned long previousTime = 0;
+boolean previousValue = false;
+boolean pulseValue = OWLOW;
+
+int currentValue = 0;
+int currentAction = OW_ACTION_SKIP;
+unsigned long currentTime = 0;
 
 // int leds[] = {
 //   2, 5, 4, 3
@@ -22,15 +26,6 @@ int leds[] = {
 };
 
 void setup() {
-  pinIn = A0;
-  pinOut = A1;
-  previousValue = OWHIGH;
-  pulseStart = millis();
-  pulsesDetected = 0;
-  // actionId = 0;
-  // int actions[][] = {};
-  pulseValue = -1;
-
   pinMode(pinIn, INPUT);
   pinMode(pinOut, OUTPUT);
 
@@ -43,41 +38,39 @@ void setup() {
 }
 
 void loop() {
-  int currentValue = readCurrentValue();
-  unsigned long currentTime = millis();
+  updateVariables();
 
+  detectAndProcessSyncPulse();
 
+  detectAndProcessNewPulse();
 
-  if (currentValue < previousValue) {
-    /*
-     * Syncpulse detected, new pulse train
-     */
-    if (currentTime - pulseStart >= 15) {
-      // Serial.print(currentTime - pulseStart);
-      // Serial.print(pulseValue);
-      Serial.println(" NEW PULSETRAIN");
+  // If a millisecond has passed
+  if (currentTime == previousTime + 1) {
+    unsigned long currentMillisecond = currentTime - pulseStart;
 
-      pulsesDetected = 0;
-      pulseStart = currentTime;
-      // pulseValue = -1;
-      // resetLeds();
+    if (currentAction != OW_ACTION_SKIP) {
+      boolean sendValue = (currentAction == OW_ACTION_HIGH) ? OWHIGH : OWLOW;
+
+      if (currentMillisecond == 1) {
+        digitalWrite(pinOut, OWLOW);
+      }
+
+      if (currentMillisecond == 3) {
+        digitalWrite(pinOut, sendValue);
+      }
+
+      if (currentMillisecond == 9) {
+        digitalWrite(pinOut, OWHIGH);
+      }
     }
 
-    pulsesDetected++;
-
-    pulseStart = currentTime;
-    pulseValue = -1;
-    asdf = false;
-  }
 
 
+    if (currentMillisecond == 4) {
+      pulseValue = currentValue;
+    }
 
-
-  if (currentTime == pulseStart + 4 && pulseValue == -1) {
-    pulseValue = currentValue;
-  }
-
-  if (currentTime == pulseStart + 9 && asdf == false) {
+    if (currentMillisecond == 9) {
       Serial.print(pulsesDetected);
       Serial.print(" - ");
       Serial.print(currentTime - pulseStart);
@@ -86,13 +79,43 @@ void loop() {
       Serial.println(pulseValue);
 
       digitalWrite(leds[pulsesDetected - 1], !pulseValue);
-
-      asdf = true;
+    }
   }
 
-
-
   previousValue = currentValue;
+  previousTime = currentTime;
+}
+
+void updateVariables() {
+  currentValue = readCurrentValue();
+  currentTime = millis();
+}
+
+/**
+ * Detect the sync pulse and setup a new pulse train
+ */
+void detectAndProcessSyncPulse() {
+  if (currentValue < previousValue && (currentTime - pulseStart) >= 15) {
+    Serial.println("\nNEW PULSETRAIN");
+
+    pulsesDetected = 0;
+    pulseStart = currentTime;
+  }
+}
+
+/**
+ * Detect a new pulse by recognizing a falling edge,
+ * increment the amount of pulses in the train and
+ * reset some variables
+ */
+void detectAndProcessNewPulse() {
+  if (currentValue < previousValue) {
+
+    pulsesDetected++;
+
+    pulseStart = currentTime;
+    pulseValue = false;
+  }
 }
 
 boolean readCurrentValue() {
@@ -100,7 +123,11 @@ boolean readCurrentValue() {
 }
 
 boolean getAction() {
-  int action = OW_ACTION_READWRITE;
+  int action = OW_ACTION_LOW;
+
+  if (pulsesDetected % 2) {
+    action = OW_ACTION_HIGH;
+  }
 
   return action;
 }

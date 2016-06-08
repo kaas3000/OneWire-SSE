@@ -11,9 +11,14 @@ int pulsesDetected;
 unsigned long pulseStart;
 boolean previousValue;
 int pulseValue;
+boolean asdf = false;
+
+// int leds[] = {
+//   2, 5, 4, 3
+// };
 
 int leds[] = {
-  2, 5, 4, 3
+  2, 3, 4, 5
 };
 
 void setup() {
@@ -41,26 +46,28 @@ void loop() {
   int currentValue = readCurrentValue();
   unsigned long currentTime = millis();
 
-  if ((currentTime - pulseStart >= 15)) {
-    Serial.println("NEW PULSETRAIN");
 
-    pulsesDetected = 0;
-    pulseStart = currentTime;
-    // pulseValue = -1;
-    // resetLeds();
-  }
 
-  if ((currentValue < previousValue)) {
-  Serial.println(currentTime - pulseStart);
+  if (currentValue < previousValue) {
+    /*
+     * Syncpulse detected, new pulse train
+     */
+    if (currentTime - pulseStart >= 15) {
+      // Serial.print(currentTime - pulseStart);
+      // Serial.print(pulseValue);
+      Serial.println(" NEW PULSETRAIN");
 
-  Serial.println(pulseValue);
-
-  digitalWrite(leds[pulsesDetected], !pulseValue);
+      pulsesDetected = 0;
+      pulseStart = currentTime;
+      // pulseValue = -1;
+      // resetLeds();
+    }
 
     pulsesDetected++;
 
     pulseStart = currentTime;
     pulseValue = -1;
+    asdf = false;
   }
 
 
@@ -68,6 +75,19 @@ void loop() {
 
   if (currentTime == pulseStart + 4 && pulseValue == -1) {
     pulseValue = currentValue;
+  }
+
+  if (currentTime == pulseStart + 9 && asdf == false) {
+      Serial.print(pulsesDetected);
+      Serial.print(" - ");
+      Serial.print(currentTime - pulseStart);
+      Serial.print(" - ");
+
+      Serial.println(pulseValue);
+
+      digitalWrite(leds[pulsesDetected - 1], !pulseValue);
+
+      asdf = true;
   }
 
 

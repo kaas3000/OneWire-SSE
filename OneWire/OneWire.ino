@@ -88,16 +88,18 @@ void loop() {
     }
 
     if (currentMillisecond == 9) {
-      // Serial.print(pulsesDetected);
-      // Serial.print(" - ");
-      // Serial.print(currentTime - pulseStart);
-      // Serial.print(" - ");
-      //
-      // Serial.println(pulseValue);
+      Serial.print(pulsesDetected);
+      Serial.print(" - ");
+      Serial.print(currentTime - pulseStart);
+      Serial.print(" - ");
+
+      Serial.println(pulseValue);
 
       digitalWrite(leds[pulsesDetected - 1], !pulseValue);
     }
   }
+
+Serial.println(currentTime - previousTime);
 
   previousValue = currentValue;
   previousTime = currentTime;

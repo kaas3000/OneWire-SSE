@@ -75,19 +75,19 @@ void loop() {
 
 
 
-      if(pulsesDetected == 1){
+      if(pulsesDetected == 5){
         delay(4);
         digitalWrite(leds[0],readCurrentValue());
       }
-      if(pulsesDetected == 2){
+      if(pulsesDetected == 6){
         delay(4);
         digitalWrite(leds[1],readCurrentValue());
       }
-      if(pulsesDetected == 3){
+      if(pulsesDetected == 7){
         delay(4);
         digitalWrite(leds[2],readCurrentValue());
       }
-      if(pulsesDetected == 4){
+      if(pulsesDetected == 8){
         delay(4);
         digitalWrite(leds[3],readCurrentValue());
         // Serial.println("nummer 96");

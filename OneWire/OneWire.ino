@@ -60,12 +60,14 @@ void loop() {
 
 
   // If a millisecond has passed
-  if (currentTime == previousTime + 1) {
-    // Serial.println(previousTime);
+  if (currentTime > previousTime) {
     unsigned long currentMillisecond = currentTime - pulseStart;
 
     if (currentAction != OW_ACTION_SKIP) {
-      boolean sendValue = (currentAction == OW_ACTION_HIGH) ? OWHIGH : OWLOW;
+      boolean sendValue = OWLOW;
+      if (currentAction == OW_ACTION_HIGH)  {
+        sendValue = OWHIGH;
+      }
 
       if (currentMillisecond == 1) {
         digitalWrite(pinOut, OWLOW);
@@ -157,10 +159,15 @@ boolean readCurrentValue() {
 }
 
 boolean getAction() {
-  int action = OW_ACTION_LOW;
+  int action = OW_ACTION_SKIP;
 
-  if (digitalRead(switches[pulsesDetected])) {
-    action = OW_ACTION_HIGH;
+  // Only send signals when sender
+  if (roleSender) {
+    if (digitalRead(switches[pulsesDetected])) {
+      action = OW_ACTION_HIGH;
+    } else {
+      action = OW_ACTION_LOW;
+    }
   }
 
   return action;

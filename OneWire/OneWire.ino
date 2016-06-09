@@ -13,7 +13,7 @@ unsigned long previousTime = 0;
 boolean previousValue = false;
 boolean pulseValue = OWLOW;
 
-boolean roleSender = true;
+boolean roleSender = false;
 
 int currentValue = 0;
 int currentAction = OW_ACTION_SKIP;
@@ -58,7 +58,6 @@ void loop() {
     detectAndProcessNewPulse();
   }
 
-  detectAndProcessNewPulse();
 
   // If a millisecond has passed
   if (currentTime == previousTime + 1) {
@@ -99,7 +98,7 @@ void loop() {
     }
   }
 
-Serial.println(currentTime - previousTime);
+// Serial.println(currentTime - previousTime);
 
   previousValue = currentValue;
   previousTime = currentTime;

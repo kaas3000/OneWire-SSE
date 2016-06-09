@@ -13,7 +13,7 @@ unsigned long previousTime = 0;
 boolean previousValue = false;
 boolean pulseValue = OWLOW;
 
-boolean roleSender = false;
+boolean roleSender = true;
 
 int currentValue = 0;
 int currentAction = OW_ACTION_SKIP;
@@ -163,7 +163,7 @@ boolean getAction() {
 
   // Only send signals when sender
   if (roleSender) {
-    if (digitalRead(switches[pulsesDetected])) {
+    if (!digitalRead(switches[pulsesDetected - 1])) {
       action = OW_ACTION_HIGH;
     } else {
       action = OW_ACTION_LOW;
@@ -174,6 +174,7 @@ boolean getAction() {
 }
 
 void sendSyncPulse() {
+  Serial.println("HEE HOO sending sync");
   digitalWrite(pinOut, OWHIGH);
   delay(20);
 }
